@@ -1,41 +1,54 @@
-import java.util.Scanner;
+import java.util.*;
 
 public class TokenBucket {
-    public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
+    public static void main(String args[]) {
+        Scanner sc = new Scanner(System.in);
 
-        // Input: bucket size and token generation rate
-        System.out.print("Enter bucket capacity (number of tokens): ");
-        int bucketCapacity = scanner.nextInt();
-        System.out.print("Enter token generation rate (tokens per second): ");
-        int tokenRate = scanner.nextInt();
+        System.out.println("Enter the token bucket capacity:");
+        int tokenCapacity = sc.nextInt();
 
-        // Input: number of packets and their sizes
-        System.out.print("Enter the number of packets: ");
-        int numPackets = scanner.nextInt();
-        int[] packetSizes = new int[numPackets];
-        System.out.println("Enter the packet sizes: ");
-        for (int i = 0; i < numPackets; i++) {
-            packetSizes[i] = scanner.nextInt();
-        }
+        System.out.println("Enter the token generation rate:");
+        int tokenRate = sc.nextInt();
+        System.out.println("Enter the output rate");
+        int outputrate=sc.nextInt();
+
+        System.out.println("Enter the number of packets:");
+        int n = sc.nextInt();
+
+        int[] packetsizes = new int[n];
+        System.out.println("Enter the packet sizes:");
+        for (int i = 0; i < n; i++)
+            packetsizes[i] = sc.nextInt();
 
         int tokens = 0;
-        int sent = 0;
-        System.out.println("\nPacket Size\tTokens Available\tSent\tTokens Remaining\tStatus");
-        for (int packetSize : packetSizes) {
-            // Generate tokens for this iteration
-            tokens = Math.min(tokens + tokenRate, bucketCapacity);
 
-            // Check if packet can be processed
-            if (packetSize <= tokens) {
-                tokens -= packetSize;
-                sent = packetSize;
-                System.out.println(packetSize + "\t\t" + (tokens+packetSize) + "\t\t\t" + sent + "\t" + tokens +  "\t\t\tAccepted");
+        System.out.println("\nTime\tPacket\tTokens Before\t Status\tTokens After");
+
+        for (int t = 0; t < n; t++) {
+
+            // Add tokens at each time unit
+            tokens += tokenRate;
+            if (tokens > tokenCapacity)
+                tokens = tokenCapacity;
+
+            int pkt = packetsizes[t];   // FIXED: use t, not i
+            int tokensBefore = tokens;
+            int tokensAfter;
+
+            if (pkt <= tokens && pkt<=outputrate) {
+                // Packet is transmitted
+                tokens -= pkt;
+                tokensAfter = tokens;
+                System.out.println(t + "\t" + pkt + "\t\t" + tokensBefore + "\t\t"+"Accepted"+"\t\t" + tokensAfter);
             } else {
-                sent = 0;
-                System.out.println(packetSize + "\t\t" + tokens + "\t\t\t" + sent + "\t" + tokens + "\t\t\tDropped");
+                // Packet is dropped
+                tokensAfter = tokens;
+                System.out.println(t + "\t" + pkt + "\t\t" + tokensBefore + "\t\t"+"Dropped"+"\t\t\t" + tokensAfter);
             }
+
+
         }
-        scanner.close();
+
+        sc.close();
     }
 }
