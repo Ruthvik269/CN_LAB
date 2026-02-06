@@ -1,45 +1,68 @@
-import java.math.BigInteger;
 import java.util.*;
+import java.math.*;
 
-class RSAalgorithm{
-        BigInteger prk, puk, mod;
+class RSA_Algorithm {
+	BigInteger publicKey, privateKey, mod;
+	
+	void getKeys(int bitlen) {
+		Random r = new Random();
+		BigInteger p = BigInteger.probablePrime(bitlen, r);
+		BigInteger q = BigInteger.probablePrime(bitlen, r);
+		
+		mod = p.multiply(q);
+		// n = p * q;
+		
+		// Compute Euler's toitent
+		// phi = (p - 1) * (q - 1);
+		BigInteger phi = p.subtract(BigInteger.ONE).multiply(q.subtract(BigInteger.ONE));
+		
+		//public key exponent --> e
+		publicKey = BigInteger.probablePrime(bitlen/2, r);
+		
+		//validate it
+		// gcd(e, phi(n)) = 1 
+		// e < phi(n)
+		while(!phi.gcd(publicKey).equals(BigInteger.ONE) || publicKey.compareTo(phi) >= 0) {
+			publicKey = BigInteger.probablePrime(bitlen/2, r);
+		}
+		
+		// d * e = 1 mod phi(n)
+		privateKey = publicKey.modInverse(phi); //generate private key
+		
+	}
 
-        void getkeys(int bitlen){
-                Random r = new Random();
-                BigInteger p = BigInteger.probablePrime(bitlen, r);
-                BigInteger q = BigInteger.probablePrime(bitlen, r);
-                mod = p.multiply(q);
-                BigInteger phi = p.subtract(BigInteger.ONE).multiply(q.subtract(BigInteger.ONE));
-                puk = BigInteger.probablePrime(bitlen/2, r);
-                while(!phi.gcd(puk).equals(BigInteger.ONE) || puk.compareTo(phi) >= 0 ){
-                        puk = BigInteger.probablePrime(bitlen/2, r);
-                }
-                prk = puk.modInverse(phi);
-                //System.out.println("Public Key: ( e= " + puk + ", n = "+ mod + ")");
-                //System.out.println("Private Key: ( d= " + prk + ", n = "+ mod + ")");
-        }
+	BigInteger encrypt(BigInteger m) {
+		return m.modPow(publicKey, mod);
+		// C = M^e mod n
 
-        BigInteger encrypt(BigInteger m){
-                return m.modPow(puk, mod);
-        }
-
-        BigInteger decrypt(BigInteger c){
-                return c.modPow(prk, mod);
-        }
+		
+	}
+	
+	BigInteger decrypt(BigInteger c) {
+		return c.modPow(privateKey, mod);
+		// M = C^d mod n
+	}
 }
 
-class Lab7RSA{
-        public static void main(String[] args){
-                RSAalgorithm rsa = new RSAalgorithm();
-                rsa.getkeys(512);
-                //rsa.displaykeys();
-                Scanner sc = new Scanner(System.in);
-                System.out.print("Enter the message to be encrypted: ");
-                BigInteger m = new BigInteger(sc.next().getBytes());
-                BigInteger c = rsa.encrypt(m);
-                System.out.println("Encrypted message: " + c.longValue());
-                BigInteger d = rsa.decrypt(c);
-                System.out.println("Decrypted message: " + new String(d.toByteArray()));
-                sc.close();
-        }
+class RSA {
+	public static void main(String[] args) {
+		RSA_Algorithm rsa = new RSA_Algorithm();
+		rsa.getKeys(512);
+		
+		Scanner sc = new Scanner(System.in);
+		
+		System.out.print("Enter the message to be encrypted: ");
+		String m = sc.next();
+		BigInteger message = new BigInteger(m.getBytes());
+		
+		BigInteger c = rsa.encrypt(message);
+		System.out.println("Encrypted message: " + c.longValue());
+		
+		BigInteger d = rsa.decrypt(c);
+		System.out.println("Decrypted message: " + new String(d.toByteArray()));
+		
+		sc.close();
+		
+	}
+	
 }
